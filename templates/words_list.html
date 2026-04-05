@@ -1,0 +1,201 @@
+{% extends "base.html" %} {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3>Words Library</h3>
+  <a href="/data_menu" class="btn btn-outline-light btn-sm">Back</a>
+</div>
+
+<div class="accordion" id="vocabAccordion">
+  {% for item in words %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{ loop.index }}">
+      <button
+        class="accordion-button collapsed"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#collapse{{ loop.index }}"
+      >
+        <strong>{{ item.word }}</strong>
+      </button>
+    </h2>
+    <div
+      id="collapse{{ loop.index }}"
+      class="accordion-collapse collapse"
+      data-bs-parent="#vocabAccordion"
+    >
+      <div class="accordion-body">
+        <div class="row">
+          <div class="col-md-8">
+            <table class="table table-sm table-borderless">
+              <table class="table table-sm table-borderless">
+              {% if item.details.hw %}
+              <tr>
+                <td class="text-muted" width="100">Headword:</td>
+                <td class="text-warning">{{ item.details.hw }}</td>
+              </tr>
+              {% endif %}
+              
+              {% if item.details.prs %}
+              <tr>
+                <td class="text-muted" style="vertical-align: middle;">Phonetic:</td>
+                <td>
+                    {% if item.details.audio_src %}
+                        <button onclick="new Audio('{{ item.details.audio_src }}').play()" 
+                                class="btn btn-sm btn-outline-info rounded-pill py-0 px-3"
+                                title="Play Pronunciation">
+                            🔊 {{ item.details.prs }}
+                        </button>
+                    {% else %}
+                        <span class="text-white">{{ item.details.prs }}</span>
+                    {% endif %}
+                </td>
+              </tr>
+              {% endif %}
+
+              <tr>
+                <td class="text-muted" width="100" style="vertical-align: top">
+                  Meanings:
+                </td>
+                <td>
+                  <ul class="list-unstyled mb-0">
+                    {% for def in item.details.meaning_en.split('|') %}
+                    <li>• {{ def }}</li>
+                    {% endfor %}
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">Greek:</td>
+                <td>{{ item.details.meaning_gr }}</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Synonyms:</td>
+                <td>
+                  {% for sub in item.details.synonyms.split('|') %} {% if sub %}
+                  <span
+                    class="badge border border-secondary fw-normal"
+                    style="color: white !important"
+                    >{{ sub }}</span
+                  >
+                  {% endif %} {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">Antonyms:</td>
+                <td>
+                  {% for sub in item.details.antonyms.split('|') %} {% if sub %}
+                  <span
+                    class="badge border border-secondary fw-normal"
+                    style="color: white !important"
+                    >{{ sub }}</span
+                  >
+                  {% endif %} {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted" style="vertical-align: top">
+                  Examples:
+                </td>
+                <td class="fst-italic">
+                  <ul class="list-unstyled mb-0">
+                    {% for ex in item.details.example.split('|') %} {% if ex %}
+                    <li>• "{{ ex }}"</li>
+                    {% endif %} {% endfor %}
+                  </ul>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="col-md-4 text-center border-start">
+            <h6>Performance</h6>
+
+            {% if item.stats.appearances > 0 %}
+            <p class="small text-muted mb-1">
+              Appearances: {{ item.stats.appearances }}
+            </p>
+
+            {% set total = item.stats.correct + item.stats.wrong +
+            item.stats.skipped %} {% if total > 0 %} {% set correct_pct =
+            (item.stats.correct / total) * 100 %} {% set skipped_pct =
+            (item.stats.skipped / total) * 100 %} {% set combined_orange_pct =
+            correct_pct + skipped_pct %} {% else %} {% set correct_pct = 0 %} {%
+            set combined_orange_pct = 0 %} {% endif %}
+
+            <svg viewBox="0 0 100 60" width="120">
+              <path
+                d="M 10 50 A 40 40 0 0 1 90 50"
+                fill="none"
+                stroke="#ffcccc"
+                stroke-width="15"
+              />
+              <path
+                d="M 10 50 A 40 40 0 0 1 90 50"
+                fill="none"
+                stroke="#dc3545"
+                stroke-width="15"
+              />
+
+              <path
+                d="M 10 50 A 40 40 0 0 1 90 50"
+                fill="none"
+                stroke="var(--skipped-color)"
+                stroke-width="15"
+                stroke-dasharray="{{ combined_orange_pct }} 100"
+                pathLength="100"
+              />
+
+              <path
+                d="M 10 50 A 40 40 0 0 1 90 50"
+                fill="none"
+                stroke="#198754"
+                stroke-width="15"
+                stroke-dasharray="{{ correct_pct }} 100"
+                pathLength="100"
+              />
+
+              <text
+                x="50"
+                y="45"
+                text-anchor="middle"
+                font-size="12"
+                font-weight="bold"
+                fill="white"
+              >
+                {{ correct_pct|int }}%
+              </text>
+              <text
+                x="50"
+                y="58"
+                text-anchor="middle"
+                font-size="8"
+                fill="#adb5bd"
+              >
+                Success
+              </text>
+            </svg>
+
+            <div class="mt-2" style="font-size: 0.75rem">
+              <span class="text-success fw-bold">{{ item.stats.correct }}</span>
+              |
+              <span class="text-skipped fw-bold">{{ item.stats.skipped }}</span>
+              |
+              <span class="text-danger fw-bold">{{ item.stats.wrong }}</span>
+            </div>
+
+            {% else %}
+            <div
+              class="d-flex align-items-center justify-content-center"
+              style="height: 100px"
+            >
+              <span class="text-muted fst-italic">No data</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

@@ -1,0 +1,525 @@
+{% extends "base.html" %} {% block content %}
+<div class="card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="text-primary">Insert New Vocabulary</h3>
+    <a href="/" class="btn btn-outline-light btn-sm">Back</a>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 fs-5 text-end">
+    <strong class="text-danger">Error:</strong>
+    <span class="text-white">{{ error }}</span>
+  </div>
+  {% endif %} {% if success %}
+  <div class="mb-4 fs-5 text-end">
+    <strong class="text-success">Success!</strong>
+    <span class="text-white">"{{ last_word.word }}" was saved.</span>
+  </div>
+  {% endif %}
+
+  <form method="POST">
+    <input type="hidden" name="hw" id="hwInputHidden" />
+    <input type="hidden" name="prs" id="prsInputHidden" />
+    <input type="hidden" name="audio_src" id="audioSrcHidden" />
+    <div class="mb-3">
+      <label class="form-label fw-bold">English Word</label>
+      <div class="input-group">
+        <input
+          type="text"
+          id="wordInput"
+          name="word"
+          class="form-control form-control-lg"
+          placeholder="e.g. serendipity"
+          oninput="this.value = this.value.toLowerCase()"
+          required
+          autofocus
+        />
+
+        <button
+          type="button"
+          class="btn btn-outline-warning"
+          id="apiBtn"
+          onclick="fetchWordData()"
+          title="Auto-fill from Dictionary"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M9.5 2.672a.5.5 0 1 0 1 0 .5.5 0 0 0-1 0zM13 3a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zM10 5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zM7 2a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"
+            />
+            <path
+              d="M14.086 2.207a2 2 0 0 0-2.828 0l-8.914 8.914a2 2 0 0 0 2.828 2.828l8.914-8.914a2 2 0 0 0 0-2.828zM2 13.293l8.914-8.914 1.414 1.414L3.414 14.707 2 13.293z"
+            />
+          </svg>
+          <span id="apiBtnText" class="ms-2">Auto-Fill</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-outline-info ms-2"
+          id="playAudioBtn"
+          onclick="playAudio()"
+          style="display: none"
+          title="Play Pronunciation"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"
+            />
+            <path
+              d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"
+            />
+            <path
+              d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 8.99 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z"
+            />
+          </svg>
+        </button>
+        <audio id="wordAudio" style="display: none"></audio>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Meaning (English) (Max 3)</label>
+        <div id="meaning-container">
+          <div class="input-group mb-2">
+            <input
+              type="text"
+              name="meaning_en[]"
+              class="form-control"
+              placeholder="e.g. happy chance"
+              oninput="this.value = this.value.toLowerCase()"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="dropdown mt-2" id="apiMeaningWrapper" style="display: none">
+          <button
+            class="btn btn-sm btn-outline-warning dropdown-toggle w-100 text-start text-truncate"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            ✨ Select Definition...
+          </button>
+          <ul
+            class="dropdown-menu dropdown-menu-dark w-100 shadow"
+            style="max-height: 300px; overflow-y: auto"
+          ></ul>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          onclick="addInput('meaning-container', 'meaning_en[]', 'Another meaning...')"
+        >
+          + Add Meaning
+        </button>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Translation (Greek)</label>
+        <input
+          type="text"
+          name="meaning_gr"
+          class="form-control"
+          placeholder="e.g. ευτυχής συγκυρία"
+          oninput="this.value = this.value.toLowerCase()"
+          required
+        />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Synonyms (Max 3)</label>
+        <div id="synonyms-container">
+          <div class="input-group mb-2">
+            <input
+              type="text"
+              name="synonyms[]"
+              class="form-control"
+              placeholder="e.g. chance"
+              required
+            />
+          </div>
+        </div>
+
+        <div
+          class="dropdown mb-2"
+          id="apiSynonymsWrapper"
+          style="display: none"
+        >
+          <button
+            class="btn btn-sm btn-outline-warning dropdown-toggle w-100 text-start text-truncate"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            ✨ Add Synonym...
+          </button>
+          <ul
+            class="dropdown-menu dropdown-menu-dark w-100 shadow"
+            style="max-height: 300px; overflow-y: auto"
+          ></ul>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          onclick="addInput('synonyms-container', 'synonyms[]', 'Another synonym...')"
+        >
+          + Add Manually
+        </button>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Antonyms (Max 3)</label>
+        <div id="antonyms-container">
+          <div class="input-group mb-2">
+            <input
+              type="text"
+              name="antonyms[]"
+              class="form-control"
+              placeholder="e.g. misfortune"
+              required
+            />
+          </div>
+        </div>
+
+        <div
+          class="dropdown mb-2"
+          id="apiAntonymsWrapper"
+          style="display: none"
+        >
+          <button
+            class="btn btn-sm btn-outline-warning dropdown-toggle w-100 text-start text-truncate"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            ✨ Add Antonym...
+          </button>
+          <ul
+            class="dropdown-menu dropdown-menu-dark w-100 shadow"
+            style="max-height: 300px; overflow-y: auto"
+          ></ul>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          onclick="addInput('antonyms-container', 'antonyms[]', 'Another antonym...')"
+        >
+          + Add Manually
+        </button>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Example Sentences (Max 3)</label>
+      <div id="example-container">
+        <div class="input-group mb-2">
+          <input
+            type="text"
+            name="example[]"
+            class="form-control"
+            placeholder="e.g. meeting her was pure serendipity."
+            required
+          />
+        </div>
+      </div>
+
+      <div class="dropdown mb-2" id="apiExamplesWrapper" style="display: none">
+        <button
+          class="btn btn-sm btn-outline-warning dropdown-toggle w-100 text-start text-truncate"
+          type="button"
+          data-bs-toggle="dropdown"
+        >
+          ✨ Add Example...
+        </button>
+        <ul
+          class="dropdown-menu dropdown-menu-dark w-100 shadow"
+          style="max-height: 300px; overflow-y: auto"
+        ></ul>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-outline-secondary btn-sm"
+        onclick="addInput('example-container', 'example[]', 'Another example...')"
+      >
+        + Add Manually
+      </button>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 py-2">Save</button>
+  </form>
+</div>
+
+<script>
+  // --- Configuration: Map Containers to their API Dropdowns ---
+  const CONTAINER_MAP = {
+    "meaning-container": "apiMeaningWrapper",
+    "synonyms-container": "apiSynonymsWrapper",
+    "antonyms-container": "apiAntonymsWrapper",
+    "example-container": "apiExamplesWrapper",
+  };
+
+  // --- 1. Fetch Data ---
+  async function fetchWordData() {
+    const word = document.getElementById("wordInput").value;
+    const btn = document.getElementById("apiBtn");
+    const btnText = document.getElementById("apiBtnText");
+
+    if (!word) return;
+
+    btnText.innerText = "Searching...";
+    btn.disabled = true;
+
+    try {
+      const response = await fetch("/lookup_word", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word: word }),
+      });
+      const data = await response.json();
+
+      // Store Hidden Data
+      document.getElementById("hwInputHidden").value = data.hw || "";
+      document.getElementById("prsInputHidden").value = data.prs || "";
+      document.getElementById("audioSrcHidden").value = data.audio_src || "";
+
+      // Populate Dropdowns
+      // Note: We pass the container ID to the populate function so it knows which one to link
+      populateDropdown(
+        "apiMeaningWrapper",
+        "meaning-container",
+        data.definitions,
+        (val) => addFromApi("meaning-container", "meaning_en[]", val)
+      );
+      populateDropdown(
+        "apiSynonymsWrapper",
+        "synonyms-container",
+        data.synonyms,
+        (val) => addFromApi("synonyms-container", "synonyms[]", val)
+      );
+      populateDropdown(
+        "apiAntonymsWrapper",
+        "antonyms-container",
+        data.antonyms,
+        (val) => addFromApi("antonyms-container", "antonyms[]", val)
+      );
+      populateDropdown(
+        "apiExamplesWrapper",
+        "example-container",
+        data.examples,
+        (val) => addFromApi("example-container", "example[]", val)
+      );
+
+      // NEW: Handle Audio
+      const audioBtn = document.getElementById("playAudioBtn");
+      const audioPlayer = document.getElementById("wordAudio");
+
+      if (data.audio_src) {
+        audioPlayer.src = data.audio_src;
+        audioBtn.style.display = "inline-block";
+      } else {
+        audioBtn.style.display = "none";
+        audioPlayer.src = "";
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Could not fetch data from dictionary.");
+    } finally {
+      btnText.innerText = "Auto-Fill";
+      btn.disabled = false;
+    }
+  }
+
+  // --- 2. Populate Dropdown ---
+  function populateDropdown(wrapperId, containerId, items, callback) {
+    const wrapper = document.getElementById(wrapperId);
+    const menu = wrapper.querySelector(".dropdown-menu");
+    menu.innerHTML = "";
+
+    if (items && items.length > 0) {
+      wrapper.style.display = "block";
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+
+        btn.className =
+          "dropdown-item text-wrap py-2 border-bottom border-secondary";
+        btn.style.whiteSpace = "normal";
+        btn.type = "button";
+        btn.innerText = item;
+        // Add a data attribute for easy finding later
+        btn.dataset.value = item.toLowerCase();
+
+        btn.onclick = () => callback(item);
+
+        li.appendChild(btn);
+        menu.appendChild(li);
+      });
+      // Initial check in case inputs are already filled manually
+      refreshDropdownState(containerId);
+    } else {
+      wrapper.style.display = "none";
+    }
+  }
+
+  // --- 3. Refresh Dropdown Visibility (The Logic) ---
+  function refreshDropdownState(containerId) {
+    const wrapperId = CONTAINER_MAP[containerId];
+    if (!wrapperId) return;
+
+    const wrapper = document.getElementById(wrapperId);
+    const menu = wrapper.querySelector(".dropdown-menu");
+    if (!menu) return;
+
+    // 1. Collect all current values in the inputs
+    const container = document.getElementById(containerId);
+    const inputs = container.getElementsByTagName("input");
+    const currentValues = Array.from(inputs).map((input) =>
+      input.value.trim().toLowerCase()
+    );
+
+    // 2. Loop through dropdown items and toggle visibility
+    const items = menu.getElementsByTagName("button");
+    let visibleCount = 0;
+
+    for (let btn of items) {
+      const itemVal = btn.dataset.value; // stored lowercase value
+      if (currentValues.includes(itemVal)) {
+        btn.parentElement.style.display = "none"; // Hide parent <li>
+      } else {
+        btn.parentElement.style.display = "block"; // Show parent <li>
+        visibleCount++;
+      }
+    }
+
+    // Optional: Hide the whole dropdown button if no options left?
+    // For now, keeping it visible is safer so user knows it exists.
+  }
+
+  // --- 4. Add From API ---
+  function addFromApi(containerId, inputName, value) {
+    const container = document.getElementById(containerId);
+    const inputs = container.getElementsByTagName("input");
+
+    let added = false;
+    // Try to use empty input first
+    for (let input of inputs) {
+      if (input.value.trim() === "") {
+        input.value = value.toLowerCase();
+        added = true;
+        break;
+      }
+    }
+
+    if (!added) {
+      if (inputs.length < 3) {
+        // addInput will create the element and attach listeners
+        addInput(containerId, inputName, value.toLowerCase());
+
+        // Explicitly set value for the new input we just made (addInput mostly sets placeholder)
+        const newInputs = container.getElementsByTagName("input");
+        newInputs[newInputs.length - 1].value = value.toLowerCase();
+      } else {
+        alert("Maximum 3 entries reached.");
+      }
+    }
+
+    // Refresh state to hide the item we just added
+    refreshDropdownState(containerId);
+  }
+
+  // --- 5. Add Input (Manual or Auto) ---
+  function addInput(containerId, inputName, placeholderText) {
+    const container = document.getElementById(containerId);
+    const currentCount = container.getElementsByTagName("input").length;
+
+    if (currentCount < 3) {
+      const newDiv = document.createElement("div");
+      newDiv.className = "input-group mb-2";
+
+      const newInput = document.createElement("input");
+      newInput.type = "text";
+      newInput.name = inputName;
+      newInput.className = "form-control";
+      newInput.placeholder = placeholderText;
+      newInput.required = true;
+
+      // Add Listeners for real-time updates
+      newInput.oninput = function () {
+        this.value = this.value.toLowerCase();
+        refreshDropdownState(containerId); // Refresh dropdown if user types manually
+      };
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-outline-danger";
+      removeBtn.innerText = "X";
+
+      // Remove Logic
+      removeBtn.onclick = function () {
+        container.removeChild(newDiv);
+        checkButtonVisibility(containerId);
+        refreshDropdownState(containerId); // Show the item again in dropdown!
+      };
+
+      newDiv.appendChild(newInput);
+      newDiv.appendChild(removeBtn);
+      container.appendChild(newDiv);
+    }
+    checkButtonVisibility(containerId);
+  }
+
+  function checkButtonVisibility(containerId) {
+    const container = document.getElementById(containerId);
+    // Find the "Add Manually" button
+    // Structure: Container -> Dropdown -> Button
+    let btn = container.parentElement.querySelector(".btn-outline-secondary");
+
+    if (btn) {
+      const count = container.getElementsByTagName("input").length;
+      btn.style.display = count >= 3 ? "none" : "inline-block";
+    }
+  }
+
+  // Initialize listeners on any pre-existing inputs (first row)
+  document.addEventListener("DOMContentLoaded", () => {
+    // We attach oninput listeners to the initial static inputs so they update the dropdown too
+    const initialIds = [
+      "meaning-container",
+      "synonyms-container",
+      "antonyms-container",
+      "example-container",
+    ];
+    initialIds.forEach((id) => {
+      const container = document.getElementById(id);
+      if (container) {
+        const inputs = container.getElementsByTagName("input");
+        for (let inp of inputs) {
+          inp.addEventListener("input", () => refreshDropdownState(id));
+        }
+      }
+    });
+  });
+
+  function playAudio() {
+    const player = document.getElementById("wordAudio");
+    player.play().catch((e) => console.log("Audio play error:", e));
+  }
+</script>
+{% endblock %}

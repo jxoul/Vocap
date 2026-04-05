@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vocap</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* --- PERMANENT DARK THEME VARIABLES --- */
+      :root {
+        --bg-color: #212529;
+        --text-color: #f8f9fa;
+        --card-bg: #343a40;
+        --input-bg: #495057;
+        --input-text: #ffffff;
+        --modal-bg: #343a40;
+        --border-color: #495057;
+        --table-hover-bg: rgba(255, 255, 255, 0.1);
+        --table-stripe-bg: rgba(255, 255, 255, 0.05);
+
+        /* APP COLORS */
+        --main-color: #f2a900; /* Bitcoin-orange */
+        --skipped-color: #ffd700; /* Brighter yellow for skipped */
+
+        /* Override Bootstrap's primary color */
+        --bs-primary: var(--main-color);
+      }
+
+      /* Apply Variables Globally */
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+      }
+
+      .container {
+        max-width: 800px;
+        margin-top: 50px;
+        padding-bottom: 50px;
+      }
+
+      .card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        background-color: var(--card-bg);
+        color: var(--text-color);
+      }
+
+      /* Fix Form Inputs */
+      .form-control,
+      .form-select {
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        border-color: var(--border-color);
+      }
+      .form-control:focus {
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        border-color: var(--main-color); /* Use main color for focus */
+        box-shadow: 0 0 0 0.25rem rgba(242, 169, 0, 0.25);
+      }
+      .form-control::placeholder {
+        color: #ced4da;
+        opacity: 0.7;
+      }
+
+      /* Fix Modals */
+      .modal-content {
+        background-color: var(--modal-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+      }
+      .modal-header,
+      .modal-footer {
+        border-color: var(--border-color);
+      }
+      .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+      }
+
+      /* Fix Tables */
+      .table {
+        color: var(--text-color);
+        --bs-table-color: var(--text-color);
+        --bs-table-bg: var(--card-bg);
+        --bs-table-striped-color: var(--text-color);
+        --bs-table-striped-bg: var(--table-stripe-bg);
+        --bs-table-hover-color: var(--text-color);
+        --bs-table-hover-bg: var(--table-hover-bg);
+        border-color: var(--border-color);
+      }
+
+      /* Fix Accordions */
+      .accordion-button {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+      }
+      .accordion-button:not(.collapsed) {
+        background-color: #495057;
+        color: white;
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.125);
+      }
+      .accordion-item {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+      }
+      .accordion-body {
+        color: var(--text-color);
+      }
+
+      /* --- GLOBAL TEXT FIXES --- */
+      .text-muted {
+        color: #adb5bd !important;
+      }
+      .badge {
+        color: #212529 !important;
+      } /* Default dark text for badges on bright colors */
+      .text-dark {
+        color: #f8f9fa !important;
+      }
+
+      /* --- CUSTOM COLOR CLASSES --- */
+
+      /* Override Bootstrap Primary Buttons & Text to use Main Color with dark text */
+      .btn-primary {
+        background-color: var(--main-color);
+        border-color: var(--main-color);
+        color: #212529;
+      }
+      .btn-primary:hover,
+      .btn-primary:focus,
+      .btn-primary:active,
+      .btn-primary.active {
+        background-color: #d99700 !important; /* Slightly darker for hover */
+        border-color: #d99700 !important;
+        color: #212529 !important;
+      }
+      .btn-outline-primary {
+        color: var(--main-color);
+        border-color: var(--main-color);
+      }
+      .btn-outline-primary:hover {
+        background-color: var(--main-color);
+        color: #212529;
+      }
+      .text-primary {
+        color: var(--main-color) !important;
+      }
+      .bg-primary {
+        background-color: var(--main-color) !important;
+        color: #212529;
+      }
+
+      /* Custom classes for the new "Skipped" yellow */
+      .text-skipped {
+        color: var(--skipped-color) !important;
+      }
+      .bg-skipped {
+        background-color: var(--skipped-color) !important;
+        color: #212529;
+      }
+      .badge-skipped {
+        background-color: var(--skipped-color) !important;
+        color: #212529;
+      }
+      .btn-outline-skipped {
+        color: var(--skipped-color);
+        border-color: var(--skipped-color);
+      }
+      .btn-outline-skipped:hover {
+        background-color: var(--skipped-color);
+        color: #212529;
+      }
+
+      /* Keep existing orange classes mapped to main color */
+      .bg-orange {
+        background-color: var(--main-color) !important;
+        color: #212529;
+      }
+      .text-orange {
+        color: var(--main-color) !important;
+      }
+
+      /* Ensure success/danger badges have white text */
+      .badge.bg-success,
+      .badge.bg-danger {
+        color: white !important;
+      }
+
+      /* --- CUSTOM ANSWER BOX STYLE --- */
+      .answer-box {
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        text-align: left;
+        display: inline-block;
+        min-width: 300px;
+      }
+
+      /* --- NAVIGATION CONTROLS --- */
+      .top-right-controls {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+      }
+
+      /* Styles for the Floating Exit Button - MODERN GLASS (Updated to Main Color) */
+      .btn-exit {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        font-weight: bold;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.8);
+
+        /* Deep red gradient */
+        background: linear-gradient(145deg, #a11b29, #851722);
+
+        /* No border, just subtle shadows for depth */
+        border: none;
+        box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.4),
+          /* Outer shadow */ inset 2px 2px 5px rgba(255, 255, 255, 0.1),
+          /* Inner top-left highlight */ inset -2px -2px 5px rgba(0, 0, 0, 0.3); /* Inner bottom-right shadow */
+
+        transition: all 0.3s ease;
+      }
+      .btn-exit:hover {
+        /* Brighter gradient on hover */
+        background: linear-gradient(145deg, #cb2234, #a81c2b);
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 7px 7px 15px rgba(0, 0, 0, 0.5),
+          inset 2px 2px 5px rgba(255, 255, 255, 0.2),
+          inset -2px -2px 5px rgba(0, 0, 0, 0.4);
+      }
+
+      .home-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 9999;
+        width: 55px;
+        height: 55px;
+        border-radius: 15px;
+        transition: transform 0.2s;
+        cursor: pointer;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+      }
+      .home-btn:hover {
+        transform: scale(1.1);
+      }
+      .home-btn img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/" class="home-btn" title="Main Menu">
+      <img src="/app_icon" alt="Home" />
+    </a>
+
+    <div class="top-right-controls">
+      <a href="/exit" class="btn-exit" title="Exit App">✕</a>
+    </div>
+
+    <div class="container">{% block content %}{% endblock %}</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

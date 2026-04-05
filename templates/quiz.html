@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card p-4">
+    
+    {% if finished %}
+        <div class="text-center">
+            <h2>Test Complete!</h2>
+            <div class="display-1 mb-3">{{ score }}%</div>
+            <p class="lead">Total Points: {{ points }}</p>
+            <a href="/" class="btn btn-primary mt-3">Back to Menu</a>
+        </div>
+
+    {% elif result %}
+        <div class="text-center">
+            {% if skipped %}
+                <h2 class="text-skipped">Skipped</h2>
+                <div class="mt-3">
+                    <p class="mb-1 text-muted">Correct Answer:</p>
+                    <div class="answer-box">
+                        <h4><strong>{{ correct_answer.text }}</strong></h4>
+                    </div>
+                </div>
+                <span class="badge badge-skipped mt-3">0 Points</span>
+
+            {% elif is_correct %}
+                <h2 class="text-success">Correct!</h2>
+                <div class="mt-3">
+                    <div class="answer-box">
+                        <h4><strong>{{ correct_answer.text }}</strong></h4>
+                    </div>
+                </div>
+                <span class="badge bg-success mt-2">+{{ points_earned }} Points</span>
+
+            {% elif is_partial %}
+                <h2 class="text-info">Partially Correct!</h2>
+                <div class="mt-3">
+                    <p class="mb-1 text-muted">Full Answer:</p>
+                    <div class="answer-box">
+                        <strong class="text-info">Synonyms:</strong> {{ correct_answer.syn | replace('|', ', ') }}<br>
+                        <strong class="text-skipped">Antonyms:</strong> {{ correct_answer.ant | replace('|', ', ') }}
+                    </div>
+                </div>
+                <span class="badge bg-info mt-2">+{{ points_earned }} Points</span>
+
+            {% else %}
+                <h2 class="text-danger">Wrong!</h2>
+                <div class="mt-3">
+                    <p class="mb-1 text-muted">You answered:</p>
+                    <h5 class="text-danger mb-3">{{ user_answer }}</h5>
+
+                    <p class="mb-1 text-muted">Correct Answer:</p>
+                    <div class="answer-box">
+                        <h4><strong>{{ correct_answer.text }}</strong></h4>
+                    </div>
+                </div>
+                <span class="badge bg-danger mt-3">{{ points_earned }} Point</span>
+            {% endif %}
+            
+            <br><br>
+            <a href="{{ next_url }}" id="nextBtn" class="btn btn-primary w-50">Next Question</a>
+            <script>
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    const btn = document.getElementById('nextBtn');
+                    if (btn) btn.click();
+                }
+            });
+        </script>
+            <br><br>
+            <div class="mt-4 text-start border-top border-secondary pt-4">
+                <h5 class="text-muted text-center mb-3">Word Details</h5>
+                <div class="card p-3" style="background-color: rgba(255, 255, 255, 0.05);">
+                    <table class="table table-sm table-borderless mb-0">
+                        {% if word_data.hw %}
+                        <tr>
+                            <td class="text-muted" width="100">Headword:</td>
+                            <td class="text-warning">{{ word_data.hw }}</td>
+                        </tr>
+                        {% endif %}
+
+                        {% if word_data.prs %}
+                        <tr>
+                            <td class="text-muted" style="vertical-align: middle;">Phonetic:</td>
+                            <td>
+                                {% if word_data.audio_src %}
+                                    <button onclick="new Audio('{{ word_data.audio_src }}').play()" 
+                                            class="btn btn-sm btn-outline-info rounded-pill py-0 px-3"
+                                            title="Play Pronunciation">
+                                        🔊 {{ word_data.prs }}
+                                    </button>
+                                {% else %}
+                                    <span class="text-white">{{ word_data.prs }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                        <tr>
+                            <td class="text-muted" width="100">Meaning:</td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    {% for def in word_data.meaning_en.split('|') %}
+                                        <li>• {{ def }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-muted">Greek:</td>
+                            <td>{{ word_data.meaning_gr }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-muted">Synonyms:</td>
+                            <td>
+                                {% for sub in word_data.synonyms.split('|') %} {% if sub %}
+                                    <span class="badge border border-secondary fw-normal" style="color: white !important;">{{ sub }}</span>
+                                {% endif %} {% endfor %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-muted">Antonyms:</td>
+                            <td>
+                                {% for sub in word_data.antonyms.split('|') %} {% if sub %}
+                                    <span class="badge border border-secondary fw-normal" style="color: white !important;">{{ sub }}</span>
+                                {% endif %} {% endfor %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-muted" style="vertical-align: top">Examples:</td>
+                            <td class="fst-italic">
+                                <ul class="list-unstyled mb-0">
+                                    {% for ex in word_data.example.split('|') %} {% if ex %}
+                                        <li>• "{{ ex }}"</li>
+                                    {% endif %} {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            
+        </div>
+
+    {% else %}
+        
+        <div class="d-flex gap-2 mb-4">
+            {% for i in range(1, total + 1) %}
+                <div class="flex-fill rounded" 
+                     style="height: 6px; transition: background-color 0.3s; 
+                            background-color: {{ 'var(--main-color)' if i <= step else 'var(--border-color)' }};">
+                </div>
+            {% endfor %}
+        </div>
+
+        <form method="POST">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <button type="submit" name="action" value="submit" style="display: none;" aria-hidden="true"></button>
+                <div>
+                    <h4>Definitions:</h4>
+                    <ul class="text-primary fs-5">
+                        {% for def in word_data.meaning_en.split('|') %}
+                            <li>{{ def }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p class="text-muted mb-0">Which English word is this?</p>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            style="width: 40px; height: 40px;"
+                            title="Get Help">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><h6 class="dropdown-header">Available Hints</h6></li>
+                        
+                            <li>
+                                <button type="submit" name="help_action" value="synonyms" class="dropdown-item d-flex justify-content-between" 
+                                        {% if 'synonyms' in helps_used %}disabled{% endif %} formnovalidate>
+                                    <span>Synonym</span>
+                                </button>
+                            </li>
+
+
+    
+                            <li>
+                                <button type="submit" name="help_action" value="antonyms" class="dropdown-item d-flex justify-content-between" 
+                                        {% if 'antonyms' in helps_used %}disabled{% endif %} formnovalidate>
+                                    <span>Antonym</span>
+                                </button>
+                            </li>
+
+
+                       <li>
+                            <button type="submit" name="help_action" value="meaning_gr" class="dropdown-item d-flex justify-content-between" 
+                                    {% if 'meaning_gr' in helps_used %}disabled{% endif %} formnovalidate>
+                                <span>Greek Meaning</span>
+                            </button>
+                        </li>
+
+                        
+
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <input type="text" name="answer" class="form-control form-control-lg" 
+                       autocomplete="off" 
+                       spellcheck="false" 
+                       autofocus 
+                       placeholder="Type your answer...">
+            </div>
+
+            {% if helps_used %}
+                <div class="mt-4 p-3 border rounded" style="background-color: rgba(255, 255, 255, 0.05);">
+                    <h6 class="text-muted mb-2 small text-uppercase">HINTS</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if 'synonyms' in helps_used %}
+                            <div class="badge bg-transparent border border-secondary p-2 fw-normal fs-6">
+                                <span class="text-white">Synonym:</span> <span class="text-orange">{{ hints.synonym }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if 'antonyms' in helps_used %}
+                            <div class="badge bg-transparent border border-secondary p-2 fw-normal fs-6">
+                                <span class="text-white">Antonym:</span> <span class="text-orange">{{ hints.antonym }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if 'meaning_gr' in helps_used %}
+                            <div class="badge bg-transparent border border-secondary p-2 fw-normal fs-6">
+                                <span class="text-white">Greek:</span> <span class="text-orange">{{ word_data.meaning_gr }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if 'meaning_en' in helps_used %}
+                            <div class="badge bg-transparent border border-secondary p-2 fw-normal fs-6 text-start">
+                                <span class="text-white d-block border-bottom border-secondary mb-1">Definitions:</span>
+                                {% for def in word_data.meaning_en.split('|') %}
+                                    <span class="text-orange d-block">• {{ def }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if 'example' in helps_used %}
+                            <div class="w-100 mt-1 fst-italic border-top pt-2">
+                                <span class="text-white">Example:</span> <span class="text-orange">"{{ hints.example }}"</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="mt-5 text-center">
+                <button type="submit" name="action" value="submit" class="btn btn-success w-100 py-2">Submit Answer</button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
