@@ -1,6 +1,6 @@
 # Vocap - Vocabulary Master
 
-**Vocap** is a modern desktop application built with Python (Flask & pywebview), designed for efficient English vocabulary learning and practice (with Greek translations). It offers a complete word management system, gamification with dynamic monthly goals, and detailed progress statistics.
+**Vocap** is a desktop application built with Python (Flask & pywebview), designed for efficient English vocabulary learning and practice (with Greek translations). It offers a complete word management system, gamification with dynamic monthly goals, and detailed progress statistics.
 
 ---
 
